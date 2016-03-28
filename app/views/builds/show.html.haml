@@ -1,0 +1,118 @@
+= content_for :title do
+  = @build.ref[0, 7]
+  &ndash;
+  = @build.repository.name
+= content_for :favicon do
+  = favicon_link_tag image_path("#{@build.to_color}.png"), :type => 'image/png'
+
+%h2.subheader
+  = @build.repository.name
+  &ndash;
+  = link_to(@build.branch_record.name, repository_branch_path(@build.repository, @build.branch_record))
+  &ndash;
+  %code.build-status{class: @build.state, title: @build.ref}
+    = @build.ref[0, 7]
+  %a.info{:href => show_link_to_commit(@build)}
+    Show
+  - if @build.branch_record.convergence?
+    %a.info{:href => show_link_to_compare(@build, @build.previous_successful_build.try(:ref), @build.ref), :title => 'show changes since last green build'}
+      Compare to last green build
+
+  .actions
+    - if @build.repository.allows_kochiku_merges?
+      %form{action: toggle_merge_on_success_repository_build_path(@build.repository, @build), method: :post}
+        %label
+          = check_box_tag :merge_on_success, true, @build.merge_on_success_enabled?, disabled: !eligible_for_merge_on_success?(@build), onchange: 'this.form.submit()'
+          Merge on Success
+
+    %label
+      = check_box_tag :refresh, true, @build.is_running?
+      Refresh
+
+.build-info.build-info-subheader
+  - if @build.succeeded? && !@build.branch_record.convergence?
+    %a.info{:href => show_link_to_create_pull_request(@build), :title => 'create a pull request against master'}
+      Create pull request
+  %span.info
+    Created
+    = timeago(@build.created_at)
+  %span.info
+    Updated
+    = timeago(@build.updated_at)
+  - if @build.completed?
+    %span.info
+      Built in #{duration_strftime(@build.elapsed_time, "%Hh %Mm %Ss")}
+  - if @build.is_running?
+    %span.info
+      = button_to "Abort Build", abort_repository_build_path(@build.repository, @build), method: :patch, class: "abort-build"
+  - if @build.failed? || @build.aborted?
+    %span.info
+      - if @build.build_parts.empty? || !@build.error_details.empty?
+        = button_to "Retry Partitioning", retry_partitioning_repository_build_path(@build.repository, @build), :method => :post, :form_class => "retry-partitioning"
+      - else
+        = button_to "Rebuild failed parts", rebuild_failed_parts_repository_build_path(@build.repository, @build), :method => :post, :form_class => "rebuild-parts"
+
+- if @build.error_details.present?
+  .build-error
+    %h2 Build error
+    %pre= [@build.error_details[:message], @build.error_details[:backtrace]].join("\n")
+%table.build-summary#build-summary
+  %thead
+    %tr
+      %th.right.id Part
+      %th.status Status
+      - display_ruby_version = multiple_ruby_versions?(@build)
+      - build_metadata_headers(@build, display_ruby_version).each do |header|
+        %th{class: header.downcase.gsub(/\W+/, '-')}= header
+      %th.type Type
+      %th.right.worker Worker
+      %th.right.time Elapsed Time
+      %th.right.count Attempt
+      %th.right.actions Actions
+  %tbody
+    - @build.build_parts.decorate.each do |part|
+      %tr{:"data-id" => part.id}
+        %td.right= link_to(part.id, repository_build_part_path(@build.repository, @build, part))
+        %td
+          %span.part-status{:class => part.status}
+            - text = part.status.to_s.capitalize
+            - if part.status == :running && part.last_attempt.log_streamer_port.present?
+              = link_to(text, stream_logs_path(part.last_attempt.id))
+            - elsif (artifact = part.most_recent_stdout_artifact)
+              = link_to(text, artifact, :title => 'Last completed stdout.log')
+            - else
+              = text
+        - build_metadata_values(@build, part, display_ruby_version).each do |value|
+          %td= value
+        %td= part.kind.to_s
+        %td.right
+          - builder = part.last_attempt.try(:builder)
+          = builder ? builder.sub(".#{Settings.domain_name}", '') : "pending"
+        %td.right.elapsed= part.elapsed_time ? duration_strftime(part.elapsed_time) : "pending"
+        %td.right= part.build_attempts.size
+        %td.right
+          - if part.unsuccessful?
+            = link_to("Rebuild", rebuild_repository_build_part_path(@build.repository, @build, part), :method => :post)
+
+- if @build.on_success_script_log_file.url
+  = link_to(File.basename(@build.on_success_script_log_file.path), @build.on_success_script_log_file.url)
+
+= content_for :javascript do
+  :javascript
+    if ($('#build-summary tbody tr').length > 0) {
+      $('#build-summary').tablesorter({ sortList: [ [1, 0] ] });
+      StartTimes = #{
+        # rubocop:disable Style/IndentationConsistency
+        start_times = {}
+        @build.build_parts.each { |part| start_times[part.id] = part.started_at }
+        start_times.to_json
+      };
+    }
+    Kochiku.delayedRefresh({table: '.build-summary tbody', renderTime: Date.parse(#{@build.updated_at.to_json})});
+
+    $('abbr.timeago').click(function() {
+      // swap the relative time with the absolute time
+      var originalText = $(this).text();
+      $(this).text($(this).attr('title'));
+      $(this).attr('title', originalText);
+    });

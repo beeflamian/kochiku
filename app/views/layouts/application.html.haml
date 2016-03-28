@@ -1,0 +1,58 @@
+!!!
+%html{:lang => 'en'}
+  %head
+    %meta{:charset => 'utf-8'}
+    %meta{:name => 'google', :value => 'notranslate'}
+    %title
+      - if (title = yield(:title)).present?
+        #{title} &ndash;
+      Kochiku
+    = stylesheet_link_tag 'tablesorter.theme.kochiku.css'
+    = stylesheet_link_tag 'tipTip.css', :media => 'screen'
+    = stylesheet_link_tag 'screen.css', :media => 'all'
+    = csrf_meta_tag
+    - if (favicon = yield(:favicon)).present?
+      = favicon
+    - else
+      = favicon_link_tag '/favicon.ico'
+  %body
+    #page
+      .section-wrapper#header
+        .section
+          %a.logo{:href => root_path, :title => "Home"}
+            %h1
+              %b Kochiku
+              %ruby.translation
+                構 <rt>こう</rt>
+                築 <rt>ちく</rt>
+          .header-right
+            = yield :header
+      .section-wrapper#content
+        .section
+          - if flash[:error].present?
+            .flash.error
+              = flash[:error]
+          - if flash[:warn].present?
+            .flash.warn
+              = flash[:warn]
+          - if flash[:message].present?
+            .flash.message
+              = flash[:message]
+          = yield
+
+      #nav
+        .section= link_to("Build taking too long? (Resque Admin)", "/resque")
+        .section= link_to("Worker Health", build_history_by_worker_path(count: 5000))
+
+  = javascript_include_tag 'application'
+  :javascript
+    $(document).ready(function() {
+      $('.part').tipTip({
+        delay: 100,
+        maxWidth: "auto",
+        edgeOffset: 10,
+        fadeIn: 100,
+        fadeOut: 100
+      });
+    });
+  = yield :javascript

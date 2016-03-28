@@ -1,0 +1,78 @@
+= content_for :title do
+  = @build.ref[0, 7]
+  &ndash;
+  = @repository.name
+= content_for :favicon do
+  = favicon_link_tag image_path("#{@build_part.to_color}.png"), :type => 'image/png'
+
+%h2.subheader
+  = link_to(@build.repository.name_with_namespace, repository_branches_path(@build.repository))
+  &ndash;
+  = link_to(@build.branch_record.name, repository_branch_path(@build.repository, @build.branch_record))
+  &ndash;
+  = link_to repository_build_path(@repository, @build) do
+    %code.build-status{class: @build.state, title: @build.ref}
+      = @build.ref[0, 7]
+  &ndash; #{@build_part.kind} (part #{@build_part.id})
+
+  .actions
+    %label
+      = link_to("Rebuild", rebuild_repository_build_part_path(@repository, @build, @build_part), method: :post, class: "rebuild button")
+    %label
+      = check_box_tag :refresh, true, @build_part.not_finished?
+      Refresh
+
+.build-info.build-info-subheader
+  %span.info
+    %span.status{:class => 'build-part-' + @build_part.status.to_s}= @build_part.status.to_s.capitalize
+    on
+    %span.queue #{@build_part.queue} queue
+
+%table.build-part-info
+  %thead
+    %tr
+      %th.right.count Attempt
+      %th.status Status
+      %th Started At
+      %th.right.time Elapsed Time
+      %th.right.worker Worker
+      %th Build Artifacts
+      %th.right.actions Actions
+  %tbody
+    - @build_part.build_attempts.each_with_index do |attempt, index|
+      %tr{:"data-id" => index + 1}
+        %td.right= index + 1
+        %td
+          %span.attempt-status{:class => attempt.state}= attempt.state.to_s.capitalize
+        %td= attempt.started_at
+        %td.right.elapsed= duration_strftime(attempt.elapsed_time)
+        %td.right= attempt.builder ? attempt.builder.sub(".#{Settings.domain_name}", '') : "pending"
+        %td
+          - if attempt.running? && attempt.log_streamer_port.present?
+            = link_to("stdout.log (in progress)", stream_logs_path(attempt.id))
+          - else
+            - attempt.build_artifacts.each do |artifact|
+              = link_to File.basename(artifact.log_file.path), artifact
+              %br
+        %td.wrap
+          - unless attempt.stopped?
+            = link_to("Abandon", finish_build_attempt_path(attempt, :state => :aborted), :method => :post)
+
+%ol#build-paths
+  - if @build_part.options['total_workers'] && @build_part.options['worker_chunk']
+    %li Chunk #{@build_part.options['worker_chunk']} of #{@build_part.options['total_workers']}
+  - @build_part.paths.each do |path|
+    %li= path
+
+= content_for :javascript do
+  :javascript
+    if ($('.build-part-info tbody tr').length > 0) {
+      $('.build-part-info').tablesorter({ sortList: [ [0, 0] ] });
+      StartTimes = #{
+        # rubocop:disable Style/IndentationConsistency
+        start_times = {}
+        @build_part.build_attempts.each_with_index { |attempt, index| start_times[index + 1] = attempt.started_at }
+        start_times.to_json
+      };
+    }
+    Kochiku.delayedRefresh({table: '.build-part-info tbody', renderTime: Date.parse("#{@build_part.updated_at}")});

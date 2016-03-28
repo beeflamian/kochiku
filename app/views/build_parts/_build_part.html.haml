@@ -1,0 +1,16 @@
+.part{:class => build_part.status, :title => build_part.paths.map{|path| "-#{path}"}.join("<br>")}
+  -# build_part.build_instance.repository is important to prevent n+1 queries here. Using the :through does a bunch of SQL.
+  %a.part-wrapper{:href => repository_build_part_path(build_part.build_instance.repository, build_part.build_instance, build_part)}
+    .kind
+      - case build_part.kind
+      - when "spec"
+        Specs
+      - when "cucumber"
+        Cukes
+      - else
+        = build_part.kind
+    - if build_part.build_attempts.any?
+      .attempts
+        = render build_part.last_attempt
+        - if build_part.build_attempts.size > 1
+          = "..."

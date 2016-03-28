@@ -1,0 +1,32 @@
+.build
+  %a.build-wrapper{:href => repository_build_path(build.repository, build)}
+    .build-info
+      .ref= build.ref
+    %h3.build-id{:class => build.state}= build.id
+    .times
+      .time-started
+        Started at
+        = time_for(build.created_at, "%m/%d %I:%M%P")
+      .time-elapsed
+        - if build.completed?
+          Built in
+          %strong
+            = duration_strftime(build.elapsed_time, "%Hh %Mm %Ss")
+
+  .build-state
+    %span.info
+      %span.state{:class => 'build-' + build.state.to_s}= build.state.to_s.capitalize
+      on
+      %span.queue= build.queue.to_s.capitalize
+    - if build.branch_record.convergence?
+      %a.info{:href => show_link_to_compare(build, build.previous_successful_build.try(:ref), build.ref), :title => 'show changes since last green build'}
+        Compare to last green build
+    - elsif build.succeeded?
+      %a.info{:href => show_link_to_create_pull_request(build), :title => 'create a pull request against master'}
+        Create pull request
+    - if build.on_success_script_log_file.present?
+      = link_to File.basename(build.on_success_script_log_file.to_s), build.on_success_script_log_file.url, :class => :info
+    %a.info.last{:href => show_link_to_commit(build)}
+      Show HEAD commit
+
+  .parts= render build.build_parts

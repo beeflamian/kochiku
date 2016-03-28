@@ -1,0 +1,13 @@
+development: &defaults
+  adapter: mysql2
+  encoding: utf8
+  reconnect: false
+  database: kochiku_development
+  pool: 15
+  username: root
+  password:
+
+test: &TEST
+  <<: *defaults
+  database: kochiku_test
+  host: 127.0.0.1

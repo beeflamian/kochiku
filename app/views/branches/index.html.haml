@@ -1,0 +1,12 @@
+- content_for :header do
+  %ul.links
+    %li= link_to("Repositories", repositories_path)
+
+.projects
+  %ul
+    - @convergence_branches.each do |branch|
+      %li.build-info.bold
+        = link_to(branch.name, repository_branch_path(branch.repository, branch))
+    - @recently_active_branches.each do |branch|
+      %li.build-info
+        = link_to(branch.name, repository_branch_path(branch.repository, branch))

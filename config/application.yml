@@ -1,0 +1,4 @@
+# Place your production Kochiku application config here.
+#
+# Start by copying the contents of config/application.dev.yml and modify as
+# desired.

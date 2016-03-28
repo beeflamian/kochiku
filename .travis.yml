@@ -1,0 +1,12 @@
+sudo: false
+cache: bundler
+language: ruby
+rvm:
+  - 2.1
+  - 2.2
+  - 2.3.0
+script:
+  - RAILS_ENV=test bundle exec rake --trace db:create db:migrate
+  - bundle exec rspec
+  - bundle exec rubocop
+  - bundle exec haml-lint app/views/

@@ -1,0 +1,60 @@
+inherit_from: .rubocop_todo.yml
+AllCops:
+  TargetRubyVersion: 2.3
+  Include:
+    - 'Rakefile'
+    - 'config.ru'
+  Exclude:
+    - 'vendor/**/*'
+    - 'db/schema.rb'
+
+Lint/HandleExceptions:
+  Exclude:
+    - 'lib/git_repo.rb'
+
+Lint/NestedMethodDefinition:
+  Exclude:
+    - 'app/jobs/enforce_timeouts_job.rb'
+
+Lint/NonLocalExitFromIterator:
+  Exclude:
+    - 'app/jobs/autosize_workers_job.rb'
+
+Lint/UselessAssignment:
+  Exclude:
+    - 'config/compass.rb'
+    - 'spec/models/build_spec.rb'
+
+Style/BlockDelimiters:
+  Enabled: false
+
+Style/EmptyLinesAroundBlockBody:
+  Enabled: false
+
+Style/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Style/ExtraSpacing:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  # will enable this after Ruby 3.0 is released
+  Enabled: false
+
+Style/GuardClause:
+  # Personally disagree with this one. In certain situations not using a
+  # GuardClause makes it more readable.
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/MultilineBlockChain:
+  Enabled: false
+
+Style/MultilineBlockLayout:
+  Exclude:
+    - 'spec/lib/partitioner/maven_spec.rb'
+
+Style/TrailingCommaInLiteral:
+  Enabled: false

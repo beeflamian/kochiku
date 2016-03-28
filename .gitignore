@@ -1,0 +1,12 @@
+/.bundle
+log/*.log
+tmp/
+public/uploads
+public/log_files
+vendor/ruby
+
+# file with the real db config for production
+/config/database.production.yml
+
+# rspec
+/spec/examples.txt

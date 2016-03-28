@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+
+# This script can be used to initiate a kochiku build of the current branch.
+# The script does not upload any code so the branch must be pushed to the remote before the script is executed.
+#
+# In order to use:
+#   - copy the script to your local machine
+#   - set KOCHIKU_HOST to the host where Kochiku is running
+
+KOCHIKU_HOST = 'https://kochiku.example.com'
+
+require 'net/https'
+require 'uri'
+require 'shellwords'
+
+# Merge on success requested?
+if ARGV.delete("--merge")
+  merge_on_success = "1"
+end
+
+# If a ref is given as an argument, use that. Otherwise use the current commit
+if ARGV[0]
+  commit_ish = Shellwords.escape(ARGV[0])
+  branch = ""
+else
+  commit_ish = "HEAD"
+  branch = `git rev-parse --abbrev-ref HEAD`.strip
+end
+
+ref = `git rev-parse #{commit_ish}`.strip
+
+# verify that the ref exists on origin
+git_branch_contains = `git branch -r --contains #{ref}`
+
+# git branch --contains will return a non-zero exit code if it does not recognize
+# the sha. It will return a 0 exit code and no output if the ref only exists locally
+if ($? == 0 && git_branch_contains.empty?) || $? != 0
+  puts "Failed: please push #{ref}"
+  exit(1)
+end
+
+repo_url = `git config --get remote.origin.url`.strip
+
+uri = URI.parse("#{KOCHIKU_HOST}/builds")
+
+params = {
+  'git_sha' => ref,
+  'git_branch' => branch,
+  'merge_on_success' => merge_on_success,
+  'repo_url' => repo_url,
+}
+
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request.set_form_data(params)
+
+response = http.request(request)
+
+if response.code.to_i >= 400
+  puts "#{response.code} #{response.message}:"
+  puts response.body
+  exit(1)
+else
+  puts response['location']
+  `open -g #{response['location']}`
+end

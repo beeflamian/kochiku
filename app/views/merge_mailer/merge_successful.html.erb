@@ -1,0 +1,14 @@
+<p>
+  Kochiku automatically merged build:
+  <%= @build.repository.to_param %>, <%= @build.id %>, <%= link_to_branch @build %>.
+</p>
+
+<p>
+  The ref for the merge is <%= link_to_commit @build %>.
+</p>
+
+stdout &amp; stderr:
+
+<pre>
+<%= @stdout_and_stderr %>
+</pre>
