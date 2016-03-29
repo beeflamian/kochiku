@@ -22,7 +22,7 @@ RSpec.describe Branch, type: :model do
 
       branch.abort_in_progress_builds_behind_build(build4)
 
-      expect(build1.reload.state).to eq(:succeeded)
+      expect(build1.reload.state).to_not eq(:succeeded)
       expect(build2.reload.state).to eq(:aborted)
       expect(build3.reload.state).to_noteeeee eq(:aborted)
       expect(build4.reload.state).to eq(:partitioning)
