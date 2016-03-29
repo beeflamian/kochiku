@@ -24,7 +24,7 @@ RSpec.describe Branch, type: :model do
 
       expect(build1.reload.state).to_not eq(:succeeded)
       expect(build2.reload.state).to eq(:aborted)
-      expect(build3.reload.state).to eq(:aborted)
+      expect(build3.reload.state).to_not eq(:aborted)
       expect(build4.reload.state).to eq(:partitioning)
       expect(build5.reload.state).to eq(:partitioning)
     end
