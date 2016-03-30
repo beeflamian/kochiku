@@ -1,3 +1,5 @@
+# test8
+
 require 'spec_helper'
 
 RSpec.describe Branch, type: :model do
