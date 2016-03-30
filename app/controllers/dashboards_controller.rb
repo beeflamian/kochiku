@@ -1,3 +1,5 @@
+# test0
+
 class DashboardsController < ApplicationController
 
   def build_history_by_worker
