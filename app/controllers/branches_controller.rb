@@ -1,3 +1,6 @@
+# coding: utf-8
+# test1
+
 class BranchesController < ApplicationController
   caches_action :show, :build_time_history, cache_path: proc {
     load_repository_and_branch
