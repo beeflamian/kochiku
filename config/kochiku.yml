@@ -6,4 +6,4 @@ ruby:
 targets:
   - type: spec
     glob: spec/**/*_spec.rb
-    workers: 5
+    workers: 1
