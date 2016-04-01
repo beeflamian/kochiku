@@ -1,5 +1,5 @@
 # coding: utf-8
-# test 0
+# test 2
 
 class BranchesController < ApplicationController
   caches_action :show, :build_time_history, cache_path: proc {
