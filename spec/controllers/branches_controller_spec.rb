@@ -13,7 +13,7 @@ describe BranchesController do
     it "shows branches in order" do
       get :index, repository_path: repo
       expect(assigns(:convergence_branches).map(&:name)).to_not eq(%w{aster})
-      expect(assigns(:recently_active_branches).map(&:name)).to_not eq(%w{creosote buckeye})
+      expect(assigns(:recently_active_branches).map(&:name)).to eq(%w{creosote buckeye})
     end
   end
 
