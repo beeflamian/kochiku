@@ -1,4 +1,4 @@
-Kochiku - Distributed tests made easy 1
+Kochiku - Distributed tests made easy 2
 =====================================
 
 Kochiku is a distributed platform for test automation. It has three main components:
